@@ -1,0 +1,68 @@
+//Librerías.
+#include <SoftwareSerial.h>
+#include <TinyGPS.h> 
+
+//Comunicación Puerto Serial Software con GPS.
+const int RX = 4;
+const int TX = 3;
+SoftwareSerial GPSModule(RX, TX); // RX, TX
+
+//Instanciamos el objeto gps.
+TinyGPS gps;
+
+//Parámetros GPS.
+int pos;
+int stringplace = 0;
+String latHEX ="";
+String longHEX ="";
+String timeUp;
+String nmea[15];
+
+void setup() {
+  //Inicializamos comunicación Serial.
+  Serial.begin(115200);
+  GPSModule.begin(9600);
+}
+
+void loop() {
+  //Conexión básica con TTN.
+  //sendJoinReq();
+  
+  //sendData(1,"1234");
+  //Serial.println("Hola");
+
+  //Lectura del GPS.
+  GPSModule.flush(); //Wait until all characters are sent.
+  GPSModule.listen();
+  while(GPSModule.available()) 
+  {
+    int c = GPSModule.read();
+ 
+    if(gps.encode(c))  
+    {
+      float latitude, longitude;
+      gps.f_get_position(&latitude, &longitude);
+      Serial.print("Latitud/Longitud: "); 
+      Serial.print(latitude,5); 
+      Serial.print(", "); 
+      Serial.println(longitude,5);  
+    }
+  }
+  delay(100);
+  
+}
+
+void sendCommand(String atComm){ 
+  Serial.println(atComm);
+  delay(2000); 
+}
+
+void sendJoinReq(){ 
+  String command = (String)"at+join" + "\r\n"; 
+  sendCommand(command); 
+} 
+
+void sendData(int port, String data){ 
+ String command = (String)"at+send=lora" + ":" + port + ":" + data + (String)"\r\n"; 
+ sendCommand(command); 
+}
